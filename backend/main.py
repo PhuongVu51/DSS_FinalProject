@@ -110,6 +110,11 @@ def get_feedback(cake_name: str, region: str = None):
     stats = services.get_feedback_stats(cake_name, region)
     return {"cake": cake_name, "stats": stats}
 
+@app.get("/api/trending")
+def get_trending():
+    """Returns the most trending products based on feedback/buys count."""
+    return services.get_trending_buys()
+
 @app.post("/api/feedback")
 def submit_feedback(feedback: FeedbackRequest):
     """Saves a new customer feedback into the database."""

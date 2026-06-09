@@ -193,3 +193,34 @@ def get_feedback_stats(cake_name: str, region: str = None):
             result.append({"score": labels[s], "count": scores_dict[s]})
             
     return result
+
+def get_trending_buys():
+    trends = {}
+    
+    # 1. Fetch from Excel
+    df_data = get_data_df()
+    if not df_data.empty and 'Sản phẩm' in df_data.columns:
+        counts = df_data['Sản phẩm'].value_counts()
+        for cake, count in counts.items():
+            trends[cake] = trends.get(cake, 0) + int(count)
+            
+    # 2. Fetch from DB
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT product_name, COUNT(*) FROM feedbacks GROUP BY product_name")
+            rows = cursor.fetchall()
+            for row in rows:
+                cake = row[0]
+                count = int(row[1])
+                trends[cake] = trends.get(cake, 0) + count
+        except Exception as e:
+            print(f"Error fetching trending from DB: {e}")
+        finally:
+            if 'cursor' in locals() and cursor: cursor.close()
+            conn.close()
+            
+    # Sort by count descending
+    sorted_trends = sorted([{"product": k, "buys": v} for k, v in trends.items()], key=lambda x: x["buys"], reverse=True)
+    return sorted_trends

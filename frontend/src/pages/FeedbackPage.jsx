@@ -7,6 +7,7 @@ export default function FeedbackPage() {
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [feedback, setFeedback] = useState([]);
   const [optimization, setOptimization] = useState(null);
+  const [trending, setTrending] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -27,6 +28,12 @@ export default function FeedbackPage() {
         if (data.length > 0) setSelectedCake(data[0]);
       })
       .catch(err => console.error("Error fetching recipes:", err));
+
+    // Fetch trending buys
+    fetch('http://localhost:8000/api/trending')
+      .then(res => res.json())
+      .then(data => setTrending(data))
+      .catch(err => console.error("Error fetching trending:", err));
   }, [navigate]);
 
   useEffect(() => {
@@ -64,6 +71,8 @@ export default function FeedbackPage() {
   const positiveRatio = totalFeedback > 0 ? Math.round((goodFeedback / totalFeedback) * 100) : 0;
   const sweetRatio = totalFeedback > 0 ? Math.round((sweetFeedback / totalFeedback) * 100) : 0;
   const blandRatio = totalFeedback > 0 ? Math.round((blandFeedback / totalFeedback) * 100) : 0;
+
+  const isAdmin = user && user.role && (user.role.includes('Nhà Sản Xuất') || user.role.includes('admin'));
 
   return (
     <div className="feedback-page">
@@ -120,6 +129,28 @@ export default function FeedbackPage() {
             </select>
           </div>
         </div>
+
+        {isAdmin && (
+          <section className="glass-card" style={{marginBottom: '32px'}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px'}}>
+              <h2 className="text-headline-sm" style={{color: 'var(--accent-pink)'}}>🔥 Trending Buys (Admin Only)</h2>
+              <span className="chip chip-cyan" style={{fontSize: '10px'}}>Most Popular Products</span>
+            </div>
+            {trending.length === 0 ? (
+              <p className="text-body-md text-secondary">Đang phân tích dữ liệu mua hàng...</p>
+            ) : (
+              <div style={{display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px'}}>
+                {trending.map((item, index) => (
+                  <div key={item.product} style={{minWidth: '220px', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-glass)'}}>
+                    <div style={{fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-cyan)', marginBottom: '8px'}}>#{index + 1}</div>
+                    <div className="text-headline-sm" style={{marginBottom: '4px'}}>{item.product}</div>
+                    <div className="text-body-sm text-secondary">{item.buys} lượt phản hồi/mua</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="grid-12">
           {/* Chart Section */}
