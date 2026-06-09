@@ -6,6 +6,7 @@ export default function FeedbackPage() {
   const [selectedCake, setSelectedCake] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [feedback, setFeedback] = useState([]);
+  const [optimization, setOptimization] = useState(null);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -42,6 +43,14 @@ export default function FeedbackPage() {
       .catch(err => {
         console.error("Error fetching feedback:", err);
       });
+
+    // Also fetch optimization data for formulas
+    fetch(`http://localhost:8000/api/recipes/${encodeURIComponent(selectedCake)}/optimize`)
+      .then(res => res.json())
+      .then(data => {
+        setOptimization(data);
+      })
+      .catch(err => console.error("Error fetching optimization:", err));
   }, [selectedCake, selectedRegion]);
 
   if (!user) return null;
@@ -196,6 +205,19 @@ export default function FeedbackPage() {
                   ? 'Giữ nguyên lượng đường để phù hợp với vị cân bằng của Đà Nẵng.' 
                   : (positiveRatio > 50 ? 'Giữ nguyên cấu trúc.' : (sweetRatio > blandRatio ? 'Giảm 10-15% lượng đường/béo để cân bằng vị giác.' : 'Tăng 5-10% lượng đường/béo để phù hợp thị hiếu.'))}
               </p>
+
+              {/* Display Adjusted Formula if a Region is Selected */}
+              {(selectedRegion !== 'All' && optimization) && (
+                <div style={{marginTop: '16px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', borderLeft: '4px solid var(--accent-pink)'}}>
+                  <span style={{color: 'var(--accent-pink)', fontWeight: 'bold', display: 'block', marginBottom: '8px'}}>Khuyến nghị công thức:</span>
+                  <pre style={{fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', margin: 0}}>
+                    {selectedRegion === 'Hà Nội' ? optimization?.regions?.hanoi?.recipe : 
+                     selectedRegion === 'TP. Hồ Chí Minh' ? optimization?.regions?.hcm?.recipe : 
+                     selectedRegion === 'Đà Nẵng' ? optimization?.regions?.danang?.recipe : 
+                     optimization?.original || 'Đang tải...'}
+                  </pre>
+                </div>
+              )}
             </div>
 
             <div style={{marginTop: 'auto', paddingTop: '24px'}}>
