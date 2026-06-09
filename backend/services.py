@@ -25,16 +25,29 @@ def get_recipe_df():
 
 def adjust_sugar_text(recipe_text, percentage_change):
     if pd.isna(recipe_text): return ""
+    if percentage_change == 0: return recipe_text
+    
     lines = str(recipe_text).split('\n')
     new_lines = []
     for line in lines:
-        if 'đường' in line.lower():
-            match = re.search(r'(\d+[\.,]?\d*)\s*(gram|g)', line, re.IGNORECASE)
+        if 'đường' in line.lower() or 'sugar' in line.lower() or 'ngọt' in line.lower():
+            match = re.search(r'(\d+[\.,]?\d*)\s*(gram|g|ml)', line, re.IGNORECASE)
             if match:
                 try:
                     old_sugar = float(match.group(1).replace(',', '.'))
                     new_sugar = old_sugar * (1 + percentage_change / 100)
-                    line = line.replace(match.group(1), f"{new_sugar:,.1f}")
+                    # Create the new value string
+                    new_val_str = f"{new_sugar:,.1f}"
+                    if new_val_str.endswith('.0'):
+                        new_val_str = new_val_str[:-2]
+                        
+                    # Replace the exact number in the string
+                    replaced_line = line.replace(match.group(1), new_val_str)
+                    
+                    # Add a visual indicator to the line
+                    direction = "Giảm" if percentage_change < 0 else "Tăng"
+                    indicator = f" (🔄 {direction} {abs(percentage_change)}% theo vùng miền)"
+                    line = replaced_line + indicator
                 except: pass
         new_lines.append(line)
     return '\n'.join(new_lines)
