@@ -188,7 +188,13 @@ export default function FeedbackPage() {
                 {positiveRatio > 50 ? ' đạt tỷ lệ hài lòng cao.' : (sweetRatio > blandRatio ? ' có xu hướng quá ngọt.' : ' có xu hướng hơi nhạt.')}
                 <br/><br/>
                 <span style={{color: 'var(--accent-pink)', fontWeight: 'bold'}}>Khuyến nghị: </span>
-                {positiveRatio > 50 ? 'Giữ nguyên cấu trúc.' : (sweetRatio > blandRatio ? 'Giảm lượng đường/béo để cân bằng vị giác.' : 'Tăng nhẹ lượng đường/béo để phù hợp thị hiếu.')}
+                {selectedRegion === 'Hà Nội' 
+                  ? 'Giảm 15% lượng đường để phù hợp thị hiếu ăn nhạt của Hà Nội.' 
+                  : selectedRegion === 'TP. Hồ Chí Minh' 
+                  ? 'Tăng 8% lượng đường để phù hợp thị hiếu đậm vị của TP. Hồ Chí Minh.' 
+                  : selectedRegion === 'Đà Nẵng' 
+                  ? 'Giữ nguyên lượng đường để phù hợp với vị cân bằng của Đà Nẵng.' 
+                  : (positiveRatio > 50 ? 'Giữ nguyên cấu trúc.' : (sweetRatio > blandRatio ? 'Giảm 10-15% lượng đường/béo để cân bằng vị giác.' : 'Tăng 5-10% lượng đường/béo để phù hợp thị hiếu.'))}
               </p>
             </div>
 
