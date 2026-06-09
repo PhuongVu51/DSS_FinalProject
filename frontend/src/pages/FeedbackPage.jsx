@@ -90,10 +90,9 @@ export default function FeedbackPage() {
           {/* Chart Section */}
           <section className="glass-card" style={{gridColumn: 'span 8', display: 'flex', flexDirection: 'column'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px'}}>
-              <h2 className="text-headline-sm">Biểu đồ phân bổ phản hồi người dùng</h2>
+              <h2 className="text-headline-sm">Biểu đồ phân bổ độ ngọt</h2>
               <div style={{display: 'flex', gap: '8px'}}>
-                <span style={{fontSize: '12px', color: 'var(--accent-pink)'}}>● Tiêu cực (1-3)</span>
-                <span style={{fontSize: '12px', color: 'var(--accent-cyan)'}}>● Tích cực (4-5)</span>
+                <span style={{fontSize: '12px', color: 'var(--accent-cyan)'}}>● Độ ngọt</span>
               </div>
             </div>
 
@@ -109,16 +108,22 @@ export default function FeedbackPage() {
                     const dataPoint = feedback.find(f => parseInt(f.score) === score);
                     const count = dataPoint ? dataPoint.count : 0;
                     const heightPercentage = Math.max((count / maxFeedback) * 100, 5); // at least 5% so it's visible
-                    const isPositive = score >= 4;
+                    const SCORE_LABELS = {
+                      1: 'Nhạt',
+                      2: 'Hơi nhạt',
+                      3: 'Vừa',
+                      4: 'Ngọt',
+                      5: 'Rất ngọt'
+                    };
                     
                     return (
                       <div key={score} className="chart-bar-wrapper">
                         <div 
-                          className={isPositive ? "chart-bar-cyan" : "chart-bar-pink"} 
+                          className="chart-bar-cyan" 
                           style={{height: heightPercentage + '%'}}
-                          title={'Score ' + score + ': ' + count + ' votes'}
+                          title={SCORE_LABELS[score] + ': ' + count + ' votes'}
                         ></div>
-                        <span className="chart-label">Score {score}</span>
+                        <span className="chart-label">{SCORE_LABELS[score]}</span>
                       </div>
                     );
                   })}
