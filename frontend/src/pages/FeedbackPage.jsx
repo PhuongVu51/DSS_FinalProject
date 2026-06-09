@@ -8,6 +8,10 @@ export default function FeedbackPage() {
   const [feedback, setFeedback] = useState([]);
   const [optimization, setOptimization] = useState(null);
   const [trending, setTrending] = useState([]);
+  const [heatmapData, setHeatmapData] = useState(null);
+  const [comboStats, setComboStats] = useState([]);
+  const [regionalComparison, setRegionalComparison] = useState([]);
+  const [experimentalPerformance, setExperimentalPerformance] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -29,11 +33,9 @@ export default function FeedbackPage() {
       })
       .catch(err => console.error("Error fetching recipes:", err));
 
-    // Fetch trending buys
-    fetch('http://localhost:8000/api/trending')
-      .then(res => res.json())
-      .then(data => setTrending(data))
-      .catch(err => console.error("Error fetching trending:", err));
+    // Fetch experimental performance (global)
+    fetch('http://localhost:8000/api/experimental_performance')
+      .then(res => res.json()).then(setExperimentalPerformance).catch(console.error);
   }, [navigate]);
 
   useEffect(() => {
@@ -51,13 +53,45 @@ export default function FeedbackPage() {
         console.error("Error fetching feedback:", err);
       });
 
-    // Also fetch optimization data for formulas
+    // Fetch optimization data for formulas
     fetch(`http://localhost:8000/api/recipes/${encodeURIComponent(selectedCake)}/optimize`)
       .then(res => res.json())
       .then(data => {
         setOptimization(data);
       })
       .catch(err => console.error("Error fetching optimization:", err));
+      
+    // Fetch heatmap data
+    fetch(`http://localhost:8000/api/feedback/${encodeURIComponent(selectedCake)}/heatmap`)
+      .then(res => res.json())
+      .then(data => setHeatmapData(data))
+      .catch(err => console.error("Error fetching heatmap:", err));
+
+    // Fetch trending buys based on region
+    let trendingUrl = 'http://localhost:8000/api/trending';
+    if (selectedRegion && selectedRegion !== 'All') {
+      trendingUrl += `?region=${encodeURIComponent(selectedRegion)}`;
+    }
+    fetch(trendingUrl)
+      .then(res => res.json())
+      .then(data => setTrending(data))
+      .catch(err => console.error("Error fetching trending:", err));
+
+    // Fetch combo stats based on region
+    let comboUrl = 'http://localhost:8000/api/combo_stats';
+    if (selectedRegion && selectedRegion !== 'All') {
+      comboUrl += `?region=${encodeURIComponent(selectedRegion)}`;
+    }
+    fetch(comboUrl)
+      .then(res => res.json())
+      .then(setComboStats)
+      .catch(err => console.error("Error fetching combo stats:", err));
+
+    // Fetch regional comparison for the selected cake
+    fetch(`http://localhost:8000/api/regional_comparison/${encodeURIComponent(selectedCake)}`)
+      .then(res => res.json())
+      .then(setRegionalComparison)
+      .catch(err => console.error("Error fetching regional comparison:", err));
   }, [selectedCake, selectedRegion]);
 
   if (!user) return null;
@@ -131,32 +165,64 @@ export default function FeedbackPage() {
         </div>
 
         {isAdmin && (
-          <section className="glass-card" style={{marginBottom: '32px'}}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px'}}>
-              <h2 className="text-headline-sm" style={{color: 'var(--accent-pink)'}}>🔥 Trending Buys (Admin Only)</h2>
-              <span className="chip chip-cyan" style={{fontSize: '10px'}}>Most Popular Products</span>
-            </div>
-            {trending.length === 0 ? (
-              <p className="text-body-md text-secondary">Đang phân tích dữ liệu mua hàng...</p>
-            ) : (
-              <div style={{display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px'}}>
-                {trending.map((item, index) => (
-                  <div key={item.product} style={{minWidth: '220px', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-glass)'}}>
-                    <div style={{fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-cyan)', marginBottom: '8px'}}>#{index + 1}</div>
-                    <div className="text-headline-sm" style={{marginBottom: '4px'}}>{item.product}</div>
-                    <div className="text-body-sm text-secondary">{item.buys} lượt phản hồi/mua</div>
-                  </div>
-                ))}
+          <div className="grid-12" style={{marginBottom: '32px'}}>
+            {/* Top Selling Products */}
+            <section className="glass-card" style={{gridColumn: 'span 6', display: 'flex', flexDirection: 'column'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px'}}>
+                <h2 className="text-headline-sm" style={{color: 'var(--accent-pink)'}}>🔥 Top Selling Products</h2>
+                <span className="chip chip-cyan" style={{fontSize: '10px'}}>{selectedRegion !== 'All' ? `tại ${selectedRegion}` : 'Toàn quốc'}</span>
               </div>
-            )}
-          </section>
+              {trending.length === 0 ? (
+                <p className="text-body-md text-secondary">Không có dữ liệu mua hàng cho khu vực này...</p>
+              ) : (
+                <div style={{display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px'}}>
+                  {trending.map((item, index) => (
+                    <div key={item.product} style={{minWidth: '180px', background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column'}}>
+                      <div style={{fontSize: '20px', fontWeight: 'bold', color: 'var(--accent-cyan)', marginBottom: '8px'}}>#{index + 1}</div>
+                      <div className="text-headline-sm" style={{marginBottom: '4px', fontSize: '15px'}}>{item.product}</div>
+                      <div className="text-body-sm text-secondary" style={{marginBottom: '12px'}}>{item.buys} lượt phản hồi/mua</div>
+                      {item.bought_with && (
+                        <div style={{marginTop: 'auto', paddingTop: '12px', borderTop: '1px dashed var(--border-glass)'}}>
+                          <div style={{fontSize: '9px', color: 'var(--text-secondary)', textTransform: 'uppercase'}}>Thường mua cùng</div>
+                          <div style={{fontSize: '12px', fontWeight: 600, color: 'var(--accent-pink)'}}>{item.bought_with}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Combo Stats */}
+            <section className="glass-card" style={{gridColumn: 'span 6', display: 'flex', flexDirection: 'column'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px'}}>
+                <h2 className="text-headline-sm" style={{color: 'var(--accent-cyan)'}}>🤝 Combo Recommendations</h2>
+                <span className="chip chip-pink" style={{fontSize: '10px'}}>Cross-sell Analysis</span>
+              </div>
+              {comboStats.length === 0 ? (
+                <p className="text-body-md text-secondary">Không có dữ liệu combo...</p>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto'}}>
+                  {comboStats.map((item, index) => (
+                    <div key={item.pair} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'}}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                        <span style={{color: 'var(--text-secondary)', fontSize: '12px', fontWeight: 'bold'}}>#{index + 1}</span>
+                        <span style={{fontWeight: 600, fontSize: '14px'}}>{item.pair}</span>
+                      </div>
+                      <span className="text-tertiary" style={{fontWeight: 'bold', fontSize: '13px'}}>{item.count} orders</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
         )}
 
-        <div className="grid-12">
+        <div className="grid-12" style={{marginBottom: '32px'}}>
           {/* Chart Section */}
-          <section className="glass-card" style={{gridColumn: 'span 8', display: 'flex', flexDirection: 'column'}}>
+          <section className="glass-card" style={{gridColumn: 'span 5', display: 'flex', flexDirection: 'column'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px'}}>
-              <h2 className="text-headline-sm">Biểu đồ phân bổ độ ngọt</h2>
+              <h2 className="text-headline-sm">Phân bổ độ ngọt</h2>
               <div style={{display: 'flex', gap: '8px'}}>
                 <span style={{fontSize: '12px', color: 'var(--accent-cyan)'}}>● Độ ngọt</span>
               </div>
@@ -165,30 +231,19 @@ export default function FeedbackPage() {
             <div className="chart-container">
               {totalFeedback === 0 ? (
                 <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)'}}>
-                  🔄 Chưa ghi nhận lượt đánh giá phản hồi nào từ người dùng cho sản phẩm này.
+                  🔄 Chưa có dữ liệu
                 </div>
               ) : (
                 <>
-                  {/* Scores 1 to 5 mapping */}
                   {[1, 2, 3, 4, 5].map(score => {
                     const dataPoint = feedback.find(f => parseInt(f.score) === score);
                     const count = dataPoint ? dataPoint.count : 0;
-                    const heightPercentage = Math.max((count / maxFeedback) * 100, 5); // at least 5% so it's visible
-                    const SCORE_LABELS = {
-                      1: 'Nhạt',
-                      2: 'Hơi nhạt',
-                      3: 'Vừa',
-                      4: 'Ngọt',
-                      5: 'Rất ngọt'
-                    };
+                    const heightPercentage = Math.max((count / maxFeedback) * 100, 5); 
+                    const SCORE_LABELS = { 1: 'Nhạt', 2: 'Hơi nhạt', 3: 'Vừa', 4: 'Ngọt', 5: 'Rất ngọt' };
                     
                     return (
                       <div key={score} className="chart-bar-wrapper">
-                        <div 
-                          className="chart-bar-cyan" 
-                          style={{height: heightPercentage + '%'}}
-                          title={SCORE_LABELS[score] + ': ' + count + ' votes'}
-                        ></div>
+                        <div className="chart-bar-cyan" style={{height: heightPercentage + '%'}} title={SCORE_LABELS[score] + ': ' + count + ' votes'}></div>
                         <span className="chart-label">{SCORE_LABELS[score]}</span>
                       </div>
                     );
@@ -199,17 +254,39 @@ export default function FeedbackPage() {
 
             <div className="stats-grid">
               <div className="stat-box">
-                <p className="stat-label">Độ hài lòng (Vừa phải)</p>
+                <p className="stat-label">Độ hài lòng</p>
                 <p className="stat-value text-tertiary">{positiveRatio}%</p>
-              </div>
-              <div className="stat-box">
-                <p className="stat-label">Response Rate</p>
-                <p className="stat-value text-secondary">92%</p>
               </div>
               <div className="stat-box">
                 <p className="stat-label">Total Samples</p>
                 <p className="stat-value" style={{color: 'var(--text-primary)'}}>{totalFeedback}</p>
               </div>
+            </div>
+          </section>
+
+          {/* Regional Comparison Chart */}
+          <section className="glass-card" style={{gridColumn: 'span 3', display: 'flex', flexDirection: 'column'}}>
+            <h2 className="text-headline-sm" style={{marginBottom: '24px'}}>Thị phần Vùng miền</h2>
+            <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center'}}>
+              {regionalComparison.length === 0 || regionalComparison.every(r => r.count === 0) ? (
+                <div style={{textAlign: 'center', color: 'var(--text-secondary)'}}>Không có dữ liệu</div>
+              ) : (
+                regionalComparison.map(r => {
+                  const total = regionalComparison.reduce((sum, item) => sum + item.count, 0);
+                  const percent = total > 0 ? Math.round((r.count / total) * 100) : 0;
+                  return (
+                    <div key={r.region}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px'}}>
+                        <span>{r.region}</span>
+                        <span style={{color: 'var(--accent-pink)', fontWeight: 'bold'}}>{percent}% ({r.count})</span>
+                      </div>
+                      <div style={{width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden'}}>
+                        <div style={{width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent-pink), var(--accent-pink-dark))'}}></div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
 
@@ -256,6 +333,98 @@ export default function FeedbackPage() {
             </div>
           </section>
         </div>
+
+        {isAdmin && (
+          <div className="grid-12" style={{marginTop: '32px'}}>
+            {/* Heatmap Section */}
+            {heatmapData && (
+              <section className="glass-card" style={{gridColumn: 'span 7'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
+                  <h2 className="text-headline-sm">Bản đồ Nhiệt Phân bố Khẩu vị (Heatmap)</h2>
+                  <span className="chip chip-pink" style={{fontSize: '10px'}}>So sánh Vùng miền</span>
+                </div>
+                
+                {(() => {
+                  const regions = ["Hà Nội", "Đà Nẵng", "TP.HCM"];
+                  const scores = [1, 2, 3, 4, 5];
+                  const SCORE_LABELS = { 1: 'Nhạt (1)', 2: 'Hơi nhạt (2)', 3: 'Vừa (3)', 4: 'Ngọt (4)', 5: 'Rất ngọt (5)' };
+                  
+                  let maxCount = 1;
+                  regions.forEach(r => {
+                    scores.forEach(s => {
+                      if (heatmapData[r] && heatmapData[r][s] > maxCount) {
+                        maxCount = heatmapData[r][s];
+                      }
+                    });
+                  });
+
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(5, 1fr)', gap: '8px', alignItems: 'center' }}>
+                      {/* Header */}
+                      <div></div>
+                      {scores.map(s => <div key={s} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>{SCORE_LABELS[s]}</div>)}
+                      
+                      {/* Rows */}
+                      {regions.map(r => (
+                        <React.Fragment key={r}>
+                          <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--accent-cyan)' }}>{r}</div>
+                          {scores.map(s => {
+                            const count = heatmapData[r] ? (heatmapData[r][s] || 0) : 0;
+                            const intensity = count / maxCount;
+                            return (
+                              <div key={`${r}-${s}`} style={{
+                                height: '40px',
+                                background: count > 0 ? `rgba(244, 114, 182, ${Math.max(0.15, intensity)})` : 'rgba(255,255,255,0.02)',
+                                border: count > 0 ? '1px solid rgba(244, 114, 182, 0.4)' : '1px dashed var(--border-glass)',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '13px',
+                                fontWeight: count > 0 ? 'bold' : 'normal',
+                                color: count > 0 ? '#fff' : 'var(--text-secondary)',
+                                transition: 'all 0.2s',
+                              }} title={`${r} - ${SCORE_LABELS[s]}: ${count} đánh giá`}>
+                                {count > 0 ? count : '-'}
+                              </div>
+                            );
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </section>
+            )}
+
+            {/* Experimental Performance */}
+            <section className="glass-card" style={{gridColumn: 'span 5', display: 'flex', flexDirection: 'column'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
+                <h2 className="text-headline-sm" style={{color: 'white'}}>R&D Experimental Pipeline</h2>
+                <span className="chip chip-cyan" style={{fontSize: '10px'}}>Low Volume / New</span>
+              </div>
+              
+              {experimentalPerformance.length === 0 ? (
+                <p className="text-body-md text-secondary">Không có sản phẩm thử nghiệm...</p>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto', maxHeight: '250px'}}>
+                  {experimentalPerformance.slice(0, 5).map(item => (
+                    <div key={item.product} style={{padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: item.status === 'Hài Lòng' ? '4px solid #10B981' : '4px solid var(--accent-pink)'}}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                        <span style={{fontWeight: 'bold', fontSize: '14px'}}>{item.product}</span>
+                        <span style={{color: item.status === 'Hài Lòng' ? '#10B981' : 'var(--accent-pink)', fontSize: '12px', fontWeight: 'bold'}}>{item.status}</span>
+                      </div>
+                      <div style={{display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)'}}>
+                        <span>⭐ Avg Score: <strong style={{color: 'white'}}>{item.avg_score}</strong></span>
+                        <span>📊 Samples: <strong style={{color: 'white'}}>{item.count}</strong></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </main>
 
       <style>{`

@@ -32,11 +32,17 @@ export default function CustomerExperiencePage() {
     fetch('http://localhost:8000/api/recipes')
       .then(r => r.json()).then(d => { setCakes(d); if (d.length > 0) setSelectedCake(d[0]); })
       .catch(console.error);
+  }, [navigate]);
 
-    fetch('http://localhost:8000/api/trending')
+  useEffect(() => {
+    let url = 'http://localhost:8000/api/trending';
+    if (region && region !== 'All') {
+      url += `?region=${encodeURIComponent(region)}`;
+    }
+    fetch(url)
       .then(r => r.json()).then(setTrending)
       .catch(console.error);
-  }, [navigate]);
+  }, [region]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -150,26 +156,48 @@ export default function CustomerExperiencePage() {
           {/* Recommendations */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
             <div style={{ flex: 1, height: '1px', background: 'var(--border-glass)' }}></div>
-            <h2 className="text-headline-sm" style={{ color: 'var(--accent-cyan)', whiteSpace: 'nowrap' }}>🔥 CÁC SẢN PHẨM TRENDING ĐƯỢC YÊU THÍCH NHẤT</h2>
+            <h2 className="text-headline-sm" style={{ color: 'var(--accent-cyan)', whiteSpace: 'nowrap' }}>🔥 CÁC SẢN PHẨM TRENDING ĐƯỢC YÊU THÍCH TẠI {region.toUpperCase()}</h2>
             <div style={{ flex: 1, height: '1px', background: 'var(--border-glass)' }}></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-            {trending.slice(0, 3).map((item, index) => (
-              <div key={item.product} className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden', border: index === 0 ? '1px solid rgba(34,211,238,0.3)' : undefined, transition: 'transform 0.3s', cursor: 'pointer' }}>
-                <div style={{ aspectRatio: '4/3', background: `linear-gradient(135deg, rgba(244,114,182,0.15), rgba(34,211,238,0.1))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '80px', borderBottom: '1px solid var(--border-glass)' }}>
-                  {item.image ? (
-                    <img src={`http://localhost:8000${item.image}`} alt={item.product} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                  ) : (
-                    "🍰"
-                  )}
+            {trending.length === 0 ? (
+               <div style={{ gridColumn: 'span 3', textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>
+                 Chưa có dữ liệu trending cho khu vực này.
+               </div>
+            ) : (
+              trending.slice(0, 3).map((item, index) => (
+                <div key={item.product} className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden', border: index === 0 ? '1px solid rgba(34,211,238,0.3)' : undefined, transition: 'transform 0.3s', cursor: 'pointer' }}>
+                  <div style={{ aspectRatio: '4/3', background: `linear-gradient(135deg, rgba(244,114,182,0.15), rgba(34,211,238,0.1))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '80px', borderBottom: '1px solid var(--border-glass)' }}>
+                    {item.image ? (
+                      <img src={`http://localhost:8000${item.image}`} alt={item.product} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                    ) : (
+                      "🍰"
+                    )}
+                  </div>
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    {index === 0 && <span className="chip chip-cyan" style={{ fontSize: '10px', marginBottom: '12px', display: 'inline-block' }}>Top 1 Trending</span>}
+                    <h3 style={{ fontWeight: 700, margin: 0, color: 'var(--accent-cyan)' }}>{item.product}</h3>
+                    
+                    {item.bought_with && (
+                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-glass)', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {item.bought_with_image ? (
+                             <img src={`http://localhost:8000${item.bought_with_image}`} alt={item.bought_with} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                          ) : (
+                             <span style={{fontSize: '20px'}}>🤝</span>
+                          )}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Thường mua cùng</div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'white', lineHeight: 1.2 }}>{item.bought_with}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                  {index === 0 && <span className="chip chip-cyan" style={{ fontSize: '10px', marginBottom: '12px', display: 'inline-block' }}>Top 1 Trending</span>}
-                  <h3 style={{ fontWeight: 700, margin: 0, color: 'var(--accent-cyan)' }}>{item.product}</h3>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Footer Insight */}

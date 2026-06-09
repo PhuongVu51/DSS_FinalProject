@@ -110,10 +110,30 @@ def get_feedback(cake_name: str, region: str = None):
     stats = services.get_feedback_stats(cake_name, region)
     return {"cake": cake_name, "stats": stats}
 
+@app.get("/api/feedback/{cake_name}/heatmap")
+def get_heatmap(cake_name: str):
+    """Returns sweetness preference heatmap data across regions."""
+    return services.get_feedback_heatmap(cake_name)
+
 @app.get("/api/trending")
-def get_trending():
-    """Returns the most trending products based on feedback/buys count."""
-    return services.get_trending_buys()
+def get_trending(region: str = None):
+    """Returns the most trending products based on feedback/buys count. Optionally filter by region."""
+    return services.get_trending_buys(region)
+
+@app.get("/api/combo_stats")
+def get_combo_stats(region: str = None):
+    """Returns combo recommendation statistics."""
+    return services.get_combo_stats(region)
+
+@app.get("/api/regional_comparison/{cake_name}")
+def get_regional_comparison(cake_name: str):
+    """Returns sales/feedback counts across regions for a specific product."""
+    return services.get_regional_comparison(cake_name)
+
+@app.get("/api/experimental_performance")
+def get_experimental_performance():
+    """Returns performance metrics for newly launched or low-volume products."""
+    return services.get_experimental_performance()
 
 @app.post("/api/feedback")
 def submit_feedback(feedback: FeedbackRequest):
