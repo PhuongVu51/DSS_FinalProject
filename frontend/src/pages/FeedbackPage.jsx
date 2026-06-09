@@ -11,7 +11,6 @@ export default function FeedbackPage() {
   const [heatmapData, setHeatmapData] = useState(null);
   const [comboStats, setComboStats] = useState([]);
   const [regionalComparison, setRegionalComparison] = useState([]);
-  const [experimentalPerformance, setExperimentalPerformance] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -32,10 +31,6 @@ export default function FeedbackPage() {
         if (data.length > 0) setSelectedCake(data[0]);
       })
       .catch(err => console.error("Error fetching recipes:", err));
-
-    // Fetch experimental performance (global)
-    fetch('http://localhost:8000/api/experimental_performance')
-      .then(res => res.json()).then(setExperimentalPerformance).catch(console.error);
   }, [navigate]);
 
   useEffect(() => {
@@ -338,7 +333,7 @@ export default function FeedbackPage() {
           <div className="grid-12" style={{marginTop: '32px'}}>
             {/* Heatmap Section */}
             {heatmapData && (
-              <section className="glass-card" style={{gridColumn: 'span 7'}}>
+              <section className="glass-card" style={{gridColumn: 'span 12'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
                   <h2 className="text-headline-sm">Bản đồ Nhiệt Phân bố Khẩu vị (Heatmap)</h2>
                   <span className="chip chip-pink" style={{fontSize: '10px'}}>So sánh Vùng miền</span>
@@ -396,33 +391,6 @@ export default function FeedbackPage() {
                 })()}
               </section>
             )}
-
-            {/* Experimental Performance */}
-            <section className="glass-card" style={{gridColumn: 'span 5', display: 'flex', flexDirection: 'column'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
-                <h2 className="text-headline-sm" style={{color: 'white'}}>R&D Experimental Pipeline</h2>
-                <span className="chip chip-cyan" style={{fontSize: '10px'}}>Low Volume / New</span>
-              </div>
-              
-              {experimentalPerformance.length === 0 ? (
-                <p className="text-body-md text-secondary">Không có sản phẩm thử nghiệm...</p>
-              ) : (
-                <div style={{display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto', maxHeight: '250px'}}>
-                  {experimentalPerformance.slice(0, 5).map(item => (
-                    <div key={item.product} style={{padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: item.status === 'Hài Lòng' ? '4px solid #10B981' : '4px solid var(--accent-pink)'}}>
-                      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                        <span style={{fontWeight: 'bold', fontSize: '14px'}}>{item.product}</span>
-                        <span style={{color: item.status === 'Hài Lòng' ? '#10B981' : 'var(--accent-pink)', fontSize: '12px', fontWeight: 'bold'}}>{item.status}</span>
-                      </div>
-                      <div style={{display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)'}}>
-                        <span>⭐ Avg Score: <strong style={{color: 'white'}}>{item.avg_score}</strong></span>
-                        <span>📊 Samples: <strong style={{color: 'white'}}>{item.count}</strong></span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
           </div>
         )}
       </main>
