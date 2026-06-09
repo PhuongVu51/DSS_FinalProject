@@ -49,8 +49,12 @@ export default function FeedbackPage() {
   // Calculate totals and max for chart height
   const totalFeedback = feedback.reduce((acc, curr) => acc + curr.count, 0);
   const maxFeedback = Math.max(...feedback.map(f => f.count), 1);
-  const goodFeedback = feedback.filter(f => parseInt(f.score) >= 4).reduce((acc, curr) => acc + curr.count, 0);
+  const goodFeedback = feedback.filter(f => parseInt(f.score) === 3).reduce((acc, curr) => acc + curr.count, 0);
+  const sweetFeedback = feedback.filter(f => parseInt(f.score) > 3).reduce((acc, curr) => acc + curr.count, 0);
+  const blandFeedback = feedback.filter(f => parseInt(f.score) < 3).reduce((acc, curr) => acc + curr.count, 0);
   const positiveRatio = totalFeedback > 0 ? Math.round((goodFeedback / totalFeedback) * 100) : 0;
+  const sweetRatio = totalFeedback > 0 ? Math.round((sweetFeedback / totalFeedback) * 100) : 0;
+  const blandRatio = totalFeedback > 0 ? Math.round((blandFeedback / totalFeedback) * 100) : 0;
 
   return (
     <div className="feedback-page">
@@ -155,7 +159,7 @@ export default function FeedbackPage() {
 
             <div className="stats-grid">
               <div className="stat-box">
-                <p className="stat-label">Positive Rate</p>
+                <p className="stat-label">Độ hài lòng (Vừa phải)</p>
                 <p className="stat-value text-tertiary">{positiveRatio}%</p>
               </div>
               <div className="stat-box">
@@ -181,10 +185,10 @@ export default function FeedbackPage() {
               </div>
               <p className="text-body-sm" style={{lineHeight: 1.6}}>
                 Dựa trên {totalFeedback} mẫu phản hồi mới nhất, hệ thống DSS xác định công thức hiện tại 
-                {positiveRatio > 70 ? ' đạt tỷ lệ hài lòng cao.' : ' cần xem xét điều chỉnh.'}
+                {positiveRatio > 50 ? ' đạt tỷ lệ hài lòng cao.' : (sweetRatio > blandRatio ? ' có xu hướng quá ngọt.' : ' có xu hướng hơi nhạt.')}
                 <br/><br/>
                 <span style={{color: 'var(--accent-pink)', fontWeight: 'bold'}}>Khuyến nghị: </span>
-                {positiveRatio > 70 ? 'Giữ nguyên cấu trúc.' : 'Điều chỉnh lại độ ngọt/béo để phù hợp hơn với thị hiếu người dùng.'}
+                {positiveRatio > 50 ? 'Giữ nguyên cấu trúc.' : (sweetRatio > blandRatio ? 'Giảm lượng đường/béo để cân bằng vị giác.' : 'Tăng nhẹ lượng đường/béo để phù hợp thị hiếu.')}
               </p>
             </div>
 

@@ -101,7 +101,7 @@ def optimize_recipe_for_regions(cake_name: str):
             default_recipe_text = existing_recipe['Recipe'].values[0]
             
     # Hanoi Logic
-    df_hn = df_data[df_data['Vùng miền'] == "Hà Nội"] if not df_data.empty else pd.DataFrame()
+    df_hn = df_data[(df_data['Vùng miền'] == "Hà Nội") & (df_data['Sản phẩm'] == cake_name)] if not df_data.empty and 'Sản phẩm' in df_data.columns else pd.DataFrame()
     mode_hn = df_hn['Muc_Do_Ngot'].mode()[0] if not df_hn.empty else 3
     recipe_hn = adjust_sugar_text(default_recipe_text, -15) if mode_hn >= 4 else adjust_sugar_text(default_recipe_text, 0)
     msg_hn = "⚠️ Thị trường thích ăn nhạt: Giảm 15% đường" if mode_hn >= 4 else "Giữ nguyên"
@@ -111,7 +111,7 @@ def optimize_recipe_for_regions(cake_name: str):
     msg_dn = "✅ Vị trí cân bằng: Giữ nguyên vị gốc"
     
     # TP.HCM Logic
-    df_hcm = df_data[df_data['Vùng miền'] == "TP.HCM"] if not df_data.empty else pd.DataFrame()
+    df_hcm = df_data[(df_data['Vùng miền'] == "TP.HCM") & (df_data['Sản phẩm'] == cake_name)] if not df_data.empty and 'Sản phẩm' in df_data.columns else pd.DataFrame()
     mode_hcm = df_hcm['Muc_Do_Ngot'].mode()[0] if not df_hcm.empty else 4
     recipe_hcm = adjust_sugar_text(default_recipe_text, 8) if mode_hcm < 4 else adjust_sugar_text(default_recipe_text, 0)
     msg_hcm = "🔥 Thị trường thích đậm vị: Tăng 8% đường" if mode_hcm < 4 else "Giữ nguyên"
