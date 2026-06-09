@@ -24,12 +24,17 @@ export default function CustomerExperiencePage() {
   const [cakes, setCakes] = useState([]);
   const [selectedCake, setSelectedCake] = useState('');
   const [region, setRegion] = useState('Hà Nội');
+  const [trending, setTrending] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetch('http://localhost:8000/api/recipes')
       .then(r => r.json()).then(d => { setCakes(d); if (d.length > 0) setSelectedCake(d[0]); })
+      .catch(console.error);
+
+    fetch('http://localhost:8000/api/trending')
+      .then(r => r.json()).then(setTrending)
       .catch(console.error);
   }, [navigate]);
 
@@ -145,24 +150,23 @@ export default function CustomerExperiencePage() {
           {/* Recommendations */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
             <div style={{ flex: 1, height: '1px', background: 'var(--border-glass)' }}></div>
-            <h2 className="text-headline-sm" style={{ color: 'var(--accent-cyan)', whiteSpace: 'nowrap' }}>✨ Gợi ý mua sắm đi kèm dành riêng cho bạn</h2>
+            <h2 className="text-headline-sm" style={{ color: 'var(--accent-cyan)', whiteSpace: 'nowrap' }}>🔥 CÁC SẢN PHẨM TRENDING ĐƯỢC YÊU THÍCH NHẤT</h2>
             <div style={{ flex: 1, height: '1px', background: 'var(--border-glass)' }}></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-            {RECOMMENDATIONS.map(rec => (
-              <div key={rec.name} className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden', border: rec.featured ? '1px solid rgba(34,211,238,0.3)' : undefined, transition: 'transform 0.3s', cursor: 'pointer' }}>
+            {trending.slice(0, 3).map((item, index) => (
+              <div key={item.product} className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden', border: index === 0 ? '1px solid rgba(34,211,238,0.3)' : undefined, transition: 'transform 0.3s', cursor: 'pointer' }}>
                 <div style={{ aspectRatio: '4/3', background: `linear-gradient(135deg, rgba(244,114,182,0.15), rgba(34,211,238,0.1))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '80px', borderBottom: '1px solid var(--border-glass)' }}>
-                  {rec.emoji}
+                  {item.image ? (
+                    <img src={`http://localhost:8000${item.image}`} alt={item.product} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                  ) : (
+                    "🍰"
+                  )}
                 </div>
-                <div style={{ padding: '20px' }}>
-                  {rec.featured && <span className="chip chip-cyan" style={{ fontSize: '10px', marginBottom: '12px', display: 'inline-block' }}>Sản phẩm khuyên dùng kèm lý tưởng</span>}
-                  <h3 style={{ fontWeight: 700, marginBottom: '8px' }}>{rec.name}</h3>
-                  <p className="text-body-sm" style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>{rec.desc}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--accent-cyan)', fontWeight: 700 }}>{rec.price}</span>
-                    <button className="btn btn-ghost" style={{ padding: '6px 12px', border: '1px solid var(--border-glass)', fontSize: '20px' }}>🛍️</button>
-                  </div>
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                  {index === 0 && <span className="chip chip-cyan" style={{ fontSize: '10px', marginBottom: '12px', display: 'inline-block' }}>Top 1 Trending</span>}
+                  <h3 style={{ fontWeight: 700, margin: 0, color: 'var(--accent-cyan)' }}>{item.product}</h3>
                 </div>
               </div>
             ))}

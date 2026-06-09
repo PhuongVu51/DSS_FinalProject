@@ -219,6 +219,7 @@ def get_trending_buys():
             
     # 2. Fetch from DB
     conn = get_db_connection()
+    images = {}
     if conn:
         try:
             cursor = conn.cursor()
@@ -228,6 +229,12 @@ def get_trending_buys():
                 cake = row[0]
                 count = int(row[1])
                 trends[cake] = trends.get(cake, 0) + count
+                
+            # Fetch images
+            cursor.execute("SELECT name, image_path FROM products")
+            prod_rows = cursor.fetchall()
+            for r in prod_rows:
+                images[r[0]] = r[1]
         except Exception as e:
             print(f"Error fetching trending from DB: {e}")
         finally:
@@ -235,5 +242,5 @@ def get_trending_buys():
             conn.close()
             
     # Sort by count descending
-    sorted_trends = sorted([{"product": k, "buys": v} for k, v in trends.items()], key=lambda x: x["buys"], reverse=True)
+    sorted_trends = sorted([{"product": k, "buys": v, "image": images.get(k)} for k, v in trends.items()], key=lambda x: x["buys"], reverse=True)
     return sorted_trends
