@@ -168,11 +168,11 @@ def get_feedback_stats(cake_name: str):
 
     # Map scores to labels
     labels = {
-        1: "1 - Rất Ngọt",
-        2: "2 - Ngọt",
+        1: "1 - Nhạt",
+        2: "2 - Hơi Nhạt",
         3: "3 - Vừa Phải",
-        4: "4 - Ít Ngọt",
-        5: "5 - Nhạt"
+        4: "4 - Ngọt",
+        5: "5 - Rất Ngọt"
     }
     
     result = []
