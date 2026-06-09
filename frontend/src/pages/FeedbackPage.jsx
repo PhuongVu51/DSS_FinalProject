@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 export default function FeedbackPage() {
   const [cakes, setCakes] = useState([]);
   const [selectedCake, setSelectedCake] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('All');
   const [feedback, setFeedback] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -29,7 +30,11 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     if (!selectedCake) return;
-    fetch(`http://localhost:8000/api/feedback/${encodeURIComponent(selectedCake)}`)
+    let url = `http://localhost:8000/api/feedback/${encodeURIComponent(selectedCake)}`;
+    if (selectedRegion && selectedRegion !== 'All') {
+      url += `?region=${encodeURIComponent(selectedRegion)}`;
+    }
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         setFeedback(data.stats || []);
@@ -37,7 +42,7 @@ export default function FeedbackPage() {
       .catch(err => {
         console.error("Error fetching feedback:", err);
       });
-  }, [selectedCake]);
+  }, [selectedCake, selectedRegion]);
 
   if (!user) return null;
 
@@ -74,16 +79,33 @@ export default function FeedbackPage() {
           <p className="text-body-md text-secondary">Real-time feedback monitoring and automated DSS decision logic.</p>
         </div>
 
-        <div className="glass-card" style={{marginBottom: '32px'}}>
-          <label className="input-label" style={{marginBottom: '8px'}}>Chọn sản phẩm bánh cần kiểm tra:</label>
-          <select 
-            className="input-field" 
-            style={{width: '100%', maxWidth: '400px'}}
-            value={selectedCake}
-            onChange={(e) => setSelectedCake(e.target.value)}
-          >
-            {cakes.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+        <div className="glass-card" style={{marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap'}}>
+          <div style={{flex: '1', minWidth: '300px'}}>
+            <label className="input-label" style={{marginBottom: '8px'}}>Chọn sản phẩm bánh cần kiểm tra:</label>
+            <select 
+              className="input-field" 
+              style={{width: '100%'}}
+              value={selectedCake}
+              onChange={(e) => setSelectedCake(e.target.value)}
+            >
+              {cakes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          
+          <div style={{flex: '1', minWidth: '300px'}}>
+            <label className="input-label" style={{marginBottom: '8px'}}>Khu vực / Thành phố:</label>
+            <select 
+              className="input-field" 
+              style={{width: '100%'}}
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+            >
+              <option value="All">Tất cả khu vực (Toàn quốc)</option>
+              <option value="Hà Nội">Hà Nội</option>
+              <option value="Đà Nẵng">Đà Nẵng</option>
+              <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+            </select>
+          </div>
         </div>
 
         <div className="grid-12">

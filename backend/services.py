@@ -134,13 +134,22 @@ def optimize_recipe_for_regions(cake_name: str):
         }
     }
 
-def get_feedback_stats(cake_name: str):
+def get_feedback_stats(cake_name: str, region: str = None):
     scores_dict = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    
+    # Normalize region for Excel
+    excel_region = region
+    if region == "TP. Hồ Chí Minh":
+        excel_region = "TP.HCM"
     
     # 1. Fetch from Excel
     df_data = get_data_df()
     if not df_data.empty and 'Sản phẩm' in df_data.columns:
         df_fb = df_data[df_data['Sản phẩm'] == cake_name]
+        if region and region != 'All':
+            if 'Vùng miền' in df_fb.columns:
+                df_fb = df_fb[df_fb['Vùng miền'] == excel_region]
+                
         if not df_fb.empty:
             # We use the Muc_Do_Ngot column which is already parsed as int in get_data_df()
             fb_counts = df_fb['Muc_Do_Ngot'].value_counts().reset_index()
@@ -154,7 +163,10 @@ def get_feedback_stats(cake_name: str):
     if conn:
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT score, COUNT(*) FROM feedbacks WHERE product_name = %s GROUP BY score", (cake_name,))
+            if region and region != 'All':
+                cursor.execute("SELECT score, COUNT(*) FROM feedbacks WHERE product_name = %s AND region = %s GROUP BY score", (cake_name, region))
+            else:
+                cursor.execute("SELECT score, COUNT(*) FROM feedbacks WHERE product_name = %s GROUP BY score", (cake_name,))
             rows = cursor.fetchall()
             for row in rows:
                 s = int(row[0])

@@ -105,9 +105,9 @@ def optimize_recipe(cake_name: str):
 
 
 @app.get("/api/feedback/{cake_name}")
-def get_feedback(cake_name: str):
+def get_feedback(cake_name: str, region: str = None):
     """Returns feedback statistics for the given cake."""
-    stats = services.get_feedback_stats(cake_name)
+    stats = services.get_feedback_stats(cake_name, region)
     return {"cake": cake_name, "stats": stats}
 
 @app.post("/api/feedback")
